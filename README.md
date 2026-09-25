@@ -2,6 +2,7 @@
 
 lost and found but better
 
+<<<<<<< Updated upstream
 ## Setup
 
 This project uses [`uv`](https://docs.astral.sh/uv/) to manage the Python environment and dependencies. The core dependencies are:
@@ -94,3 +95,15 @@ python -c "import gradio, torch, flask, huggingface_hub; print('all good')"
 ```bash
 python app.py
 ```
+=======
+## Run the backend
+
+Install the backend dependencies and start the API from the repository root:
+
+```sh
+python -m pip install -r requirements.txt
+python app_backend/main.py
+```
+
+The API listens on `http://127.0.0.1:5001`. Check `http://127.0.0.1:5001/api/health` for its health status. Set `APP_HOST` or `APP_PORT` to override the bind address or port.
+>>>>>>> Stashed changes
