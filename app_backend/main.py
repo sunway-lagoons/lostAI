@@ -8,7 +8,8 @@ Routes:
 """
 
 import json
-import os
+from datetime import datetime, timezone
+
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
@@ -49,9 +50,41 @@ def upload_image():
     if not parsed_tags:
         parsed_tags = ["wallet", "leather", "accessory"]
 
+    raw_surfaces = request.form.get("scan_surfaces", "").strip()
+    scan_surfaces = []
+    if raw_surfaces:
+        if raw_surfaces.startswith("["):
+            try:
+                loaded_surfaces = json.loads(raw_surfaces)
+            except json.JSONDecodeError:
+                return jsonify({"error": "Malformed JSON in scan_surfaces"}), 400
+            if not isinstance(loaded_surfaces, list) or not all(
+                isinstance(surface, str) for surface in loaded_surfaces
+            ):
+                return jsonify({"error": "scan_surfaces must be a list of strings"}), 400
+            scan_surfaces = [
+                surface.strip() for surface in loaded_surfaces if surface.strip()
+            ]
+        else:
+            scan_surfaces = [
+                surface.strip()
+                for surface in raw_surfaces.split(",")
+                if surface.strip()
+            ]
+
+    metadata = {
+        "location_pin": request.form.get("location_pin", "").strip(),
+        "timestamp": request.form.get("timestamp", "").strip()
+        or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "scan_surfaces": scan_surfaces,
+        "description": request.form.get("description", "").strip(),
+        "email": request.form.get("email", "").strip(),
+        "name": request.form.get("name", "").strip(),
+    }
+
     try:
         from .images import store_image
-        result = store_image(file, tags=parsed_tags)
+        result = store_image(file, tags=parsed_tags, metadata=metadata)
         return jsonify(result), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

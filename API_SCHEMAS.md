@@ -21,6 +21,40 @@ Base: the app backend HTTP API. Endpoints that accept images use
 `multipart/form-data`; the JSON schemas below describe the non-file fields and
 the JSON responses.
 
+### `POST /api/upload-image` — store an image and item details
+
+Request (`multipart/form-data`): required `file` image part and optional
+fields `tags`, `location_pin`, `timestamp`, `scan_surfaces`, `description`,
+`email`, and `name`. `tags` accepts a JSON array or comma-separated text.
+`scan_surfaces` accepts a JSON array of strings or comma-separated text. If
+`timestamp` is omitted or empty, the backend records the current UTC time as an
+ISO 8601 string ending in `Z`.
+
+The backend stores tags in `<image-stem>.txt` and the remaining item details as
+JSON in `<image-stem>.metadata.txt`.
+
+Response `200` includes the saved paths and normalized metadata:
+
+```json
+{
+  "filename": "wallet.jpg",
+  "filepath": ".../images/wallet.jpg",
+  "relative_path": "tags/wallet.jpg",
+  "extension": "jpg",
+  "tags": ["wallet", "leather"],
+  "tag_file": ".../images/wallet.txt",
+  "metadata": {
+    "location_pin": "37.7749,-122.4194",
+    "timestamp": "2026-09-25T12:30:00Z",
+    "scan_surfaces": ["front", "back"],
+    "description": "Brown leather bifold wallet",
+    "email": "finder@example.com",
+    "name": "Alex Finder"
+  },
+  "metadata_file": ".../images/wallet.metadata.txt"
+}
+```
+
 ### `POST /objects` — register an object
 
 Request (`multipart/form-data`): `metadata` JSON part + repeated `images` file
