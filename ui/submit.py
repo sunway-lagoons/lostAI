@@ -27,15 +27,17 @@ asu_theme = gr.themes.Default(
     slider_color="*secondary_500"
 )
 
-def process_submission(title, description, date, location, tags, images):
-    num_images = len(images) if images else 0
-    if num_images > 4:
-        return "⚠️ Error: Please upload a maximum of 4 images."
+# Updated function to handle 4 separate image inputs
+def process_submission(title, description, date, location, tags, top_img, bot_img, s1_img, s2_img):
     if not title or not location:
         return "⚠️ Error: Title and Location are required fields."
-    return f"✅ Successfully submitted '{title}'!"
+    
+    # Optional: count how many images were actually uploaded
+    uploaded_images = [img for img in [top_img, bot_img, s1_img, s2_img] if img is not None]
+    
+    return f"✅ Successfully submitted '{title}' with {len(uploaded_images)} image(s)!"
 
-# 3. Apply the theme in Blocks (notice theme is removed from here for Gradio 6.0)
+# 3. Apply the theme in Blocks
 with gr.Blocks() as lost_found_ui:
     gr.Markdown("# 🔱 Submit a Lost Item")
     
@@ -56,14 +58,23 @@ with gr.Blocks() as lost_found_ui:
             multiselect=True
         )
         
-    images = gr.File(file_count="multiple", file_types=["image"], label="Images (Up to 4 files)")
+    gr.Markdown("### Image Uploads")
+    
+    # 4 separate image boxes arranged in a 2x2 grid
+    with gr.Row():
+        top_image = gr.Image(type="filepath", label="Top")
+        bottom_image = gr.Image(type="filepath", label="Bottom")
+    with gr.Row():
+        side1_image = gr.Image(type="filepath", label="Side 1")
+        side2_image = gr.Image(type="filepath", label="Side 2")
     
     submit_btn = gr.Button("Submit Item", variant="primary")
     status_output = gr.Textbox(label="Submission Status", interactive=False)
     
+    # Make sure to pass all 4 image components to the inputs list
     submit_btn.click(
         fn=process_submission,
-        inputs=[title, description, date, location, tags, images],
+        inputs=[title, description, date, location, tags, top_image, bottom_image, side1_image, side2_image],
         outputs=[status_output]
     )
 
