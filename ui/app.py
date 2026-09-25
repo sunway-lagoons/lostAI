@@ -37,6 +37,9 @@ css = """
 footer { display: none !important; }
 """
 
+# ==========================================
+# BACKEND MOCK FUNCTIONS
+# ==========================================
 def show_query(text):
     if not text.strip():
         return gr.update(visible=False), ""
@@ -53,11 +56,22 @@ def process_submission(title, description, date, location, tags, images):
 def claim_item(item_name):
     return f"Claim request initiated for: {item_name}. Please proceed to the Information Desk."
 
+def process_bounty(title, location, tags, top_img, bot_img, s1_img, s2_img):
+    if not title or not location:
+        return "⚠️ Error: Title and Location are required fields."
+    
+    uploaded_images = [img for img in [top_img, bot_img, s1_img, s2_img] if img is not None]
+    
+    return f"🚨 REPORT ACTIVATED! '{title}' reported missing with {len(uploaded_images)} reference image(s)."
+
+# ==========================================
+# UI CONSTRUCTION
+# ==========================================
 with gr.Blocks(title="lostAI | ASU") as app:
     
-    # ==========================================
+    # ------------------------------------------
     # PAGE 1: HOME (Visible by default)
-    # ==========================================
+    # ------------------------------------------
     with gr.Column(visible=True) as home_page:
         with gr.Row():
             gr.Markdown(
@@ -79,11 +93,11 @@ with gr.Blocks(title="lostAI | ASU") as app:
         with gr.Row():
             btn_advanced_search = gr.Button("Advanced Search", variant="secondary")
             btn_submit_found = gr.Button("Submit a Found Item", variant="secondary")
+            btn_report_missing = gr.Button("Report a Missing Item", variant="secondary")
 
         # RECENTLY FOUND ITEMS GRID
         gr.Markdown("### Recently Found Items")
         
-        # Row 1 of Items
         with gr.Row():
             with gr.Column():
                 gr.Markdown("#### Bag phannypack")
@@ -109,7 +123,6 @@ with gr.Blocks(title="lostAI | ASU") as app:
                 gr.Markdown("Single gold house key. Found outside Memorial Union.")
                 btn_claim_4 = gr.Button("Claim Item", variant="primary")
 
-        # Row 2 of Items
         with gr.Row():
             with gr.Column():
                 gr.Markdown("#### AirPod (right)")
@@ -135,16 +148,15 @@ with gr.Blocks(title="lostAI | ASU") as app:
                 gr.Markdown("White Apple AirPods case with both earbuds inside.")
                 btn_claim_8 = gr.Button("Claim Item", variant="primary")
 
-        # Status output for claim buttons
         claim_status = gr.Markdown()
 
         with gr.Column(visible=False) as results_box:
             gr.Markdown("### Search Results")
             results_display = gr.Markdown()
 
-    # ==========================================
-    # PAGE 2: ADVANCED SEARCH (Hidden by default)
-    # ==========================================
+    # ------------------------------------------
+    # PAGE 2: ADVANCED SEARCH (Hidden)
+    # ------------------------------------------
     with gr.Column(visible=False) as adv_search_page:
         btn_home_from_adv = gr.Button("← Back to Home", variant="secondary", size="sm")
         gr.Markdown("### Advanced Search")
@@ -169,12 +181,12 @@ with gr.Blocks(title="lostAI | ASU") as app:
         adv_search_btn = gr.Button("Search", variant="primary")
         adv_results_display = gr.Markdown("--- \n*Results will appear here.*")
 
-    # ==========================================
-    # PAGE 3: SUBMIT FOUND ITEM (Hidden by default)
-    # ==========================================
+    # ------------------------------------------
+    # PAGE 3: SUBMIT FOUND ITEM (Hidden)
+    # ------------------------------------------
     with gr.Column(visible=False) as submit_page:
         btn_home_from_found = gr.Button("← Back to Home", variant="secondary", size="sm")
-        gr.Markdown("### Submit a Lost Item")
+        gr.Markdown("### Submit a Found Item")
         
         with gr.Row():
             submit_title = gr.Textbox(label="Title", placeholder="e.g., Blue Hydro Flask")
@@ -198,28 +210,60 @@ with gr.Blocks(title="lostAI | ASU") as app:
         submit_item_btn = gr.Button("Submit Item", variant="primary")
         status_output = gr.Textbox(label="Submission Status", interactive=False)
 
+    # ------------------------------------------
+    # PAGE 4: REPORT MISSING ITEM (Hidden)
+    # ------------------------------------------
+    with gr.Column(visible=False) as report_page:
+        btn_home_from_report = gr.Button("← Back to Home", variant="secondary", size="sm")
+        gr.Markdown("### 🚨 Report a Missing Item")
+        
+        with gr.Row():
+            report_title = gr.Textbox(label="Title", placeholder="e.g., Missing AirPods Pro")
+            
+        with gr.Row():
+            report_location = gr.Dropdown(
+                choices=["Memorial Union", "Hayden Library", "SDFC", "Computing Commons"], 
+                label="Last Known Location"
+            )
+            report_tags = gr.Dropdown(
+                choices=TAGS, 
+                label="Tags", 
+                multiselect=True
+            )
+            
+        gr.Markdown("#### Reference Images")
+        with gr.Row():
+            report_top = gr.Image(type="filepath", label="Top")
+            report_bot = gr.Image(type="filepath", label="Bottom")
+        with gr.Row():
+            report_s1 = gr.Image(type="filepath", label="Side 1")
+            report_s2 = gr.Image(type="filepath", label="Side 2")
+        
+        report_submit_btn = gr.Button("Post Missing Report", variant="primary")
+        report_status = gr.Textbox(label="Report Status", interactive=False)
+
     # ==========================================
     # BUTTON ROUTING LOGIC
     # ==========================================
-    def go_to_adv():
-        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
-        
-    def go_to_submit():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
-        
-    def go_to_home():
-        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
-
-    btn_advanced_search.click(fn=go_to_adv, inputs=None, outputs=[home_page, adv_search_page, submit_page])
-    btn_submit_found.click(fn=go_to_submit, inputs=None, outputs=[home_page, adv_search_page, submit_page])
+    # Helper lists to manage visibility updates efficiently
+    all_pages = [home_page, adv_search_page, submit_page, report_page]
     
-    btn_home_from_adv.click(fn=go_to_home, inputs=None, outputs=[home_page, adv_search_page, submit_page])
-    btn_home_from_found.click(fn=go_to_home, inputs=None, outputs=[home_page, adv_search_page, submit_page])
+    def go_to_adv(): return [gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)]
+    def go_to_submit(): return [gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)]
+    def go_to_report(): return [gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)]
+    def go_to_home(): return [gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)]
+
+    btn_advanced_search.click(fn=go_to_adv, inputs=None, outputs=all_pages)
+    btn_submit_found.click(fn=go_to_submit, inputs=None, outputs=all_pages)
+    btn_report_missing.click(fn=go_to_report, inputs=None, outputs=all_pages)
+    
+    btn_home_from_adv.click(fn=go_to_home, inputs=None, outputs=all_pages)
+    btn_home_from_found.click(fn=go_to_home, inputs=None, outputs=all_pages)
+    btn_home_from_report.click(fn=go_to_home, inputs=None, outputs=all_pages)
 
     # ==========================================
     # EVENT LOGIC
     # ==========================================
-    # Claim Button logic
     btn_claim_1.click(fn=lambda: claim_item("Bag phannypack"), outputs=claim_status)
     btn_claim_2.click(fn=lambda: claim_item("Card wallet"), outputs=claim_status)
     btn_claim_3.click(fn=lambda: claim_item("White beaded ring"), outputs=claim_status)
@@ -236,6 +280,12 @@ with gr.Blocks(title="lostAI | ASU") as app:
         fn=process_submission,
         inputs=[submit_title, submit_description, submit_date, submit_location, submit_tags, submit_images],
         outputs=[status_output]
+    )
+    
+    report_submit_btn.click(
+        fn=process_bounty,
+        inputs=[report_title, report_location, report_tags, report_top, report_bot, report_s1, report_s2],
+        outputs=[report_status]
     )
 
 if __name__ == "__main__":
