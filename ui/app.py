@@ -33,10 +33,8 @@ asu_theme = gr.themes.Default(
     slider_color="*secondary_500"
 )
 
-# Custom CSS to hide the tab navigation bar and the Gradio footer
 css = """
 footer { display: none !important; }
-.tab-nav { display: none !important; }
 """
 
 def show_query(text):
@@ -52,104 +50,184 @@ def process_submission(title, description, date, location, tags, images):
         return "⚠️ Error: Title and Location are required fields."
     return f"✅ Successfully submitted '{title}'!"
 
+def claim_item(item_name):
+    return f"Claim request initiated for: {item_name}. Please proceed to the Information Desk."
+
 with gr.Blocks(title="lostAI | ASU") as app:
     
-    with gr.Tabs() as main_tabs:
+    # ==========================================
+    # PAGE 1: HOME (Visible by default)
+    # ==========================================
+    with gr.Column(visible=True) as home_page:
+        with gr.Row():
+            gr.Markdown(
+                """
+                # lostAI: ASU Memorial Union
+                **Lost and found, but smarter.**
+                """
+            )
+
+        with gr.Row():
+            search_bar = gr.Textbox(
+                show_label=False,
+                placeholder="Search lost items (e.g., 'blue Hydro Flask', 'car keys', 'AirPods')...",
+                scale=5,
+                container=False
+            )
+            search_btn = gr.Button("Search", variant="primary", scale=1)
+
+        with gr.Row():
+            btn_advanced_search = gr.Button("Advanced Search", variant="secondary")
+            btn_submit_found = gr.Button("Submit a Found Item", variant="secondary")
+
+        # RECENTLY FOUND ITEMS GRID
+        gr.Markdown("### Recently Found Items")
         
-        # ==========================================
-        # TAB 1: HOME PAGE
-        # ==========================================
-        with gr.Tab("Home", id="home_tab"):
-            with gr.Row():
-                gr.Markdown(
-                    """
-                    # lostAI: ASU Memorial Union
-                    **Lost and found, but smarter.**
-                    """
-                )
-
-            with gr.Row():
-                search_bar = gr.Textbox(
-                    show_label=False,
-                    placeholder="Search lost items (e.g., 'blue Hydro Flask', 'car keys', 'AirPods')...",
-                    scale=5,
-                    container=False
-                )
-                search_btn = gr.Button("Search", variant="primary", scale=1)
-
-            with gr.Row():
-                btn_advanced_search = gr.Button("Advanced Search", variant="secondary")
-                btn_submit_found = gr.Button("Submit a Found Item", variant="secondary")
-
-            with gr.Column(visible=False) as results_box:
-                gr.Markdown("### Search Results")
-                results_display = gr.Markdown()
-
-        # ==========================================
-        # TAB 2: ADVANCED SEARCH
-        # ==========================================
-        with gr.Tab("Advanced Search", id="adv_search_tab"):
-            btn_home_from_adv = gr.Button("← Back to Home", variant="secondary", size="sm")
-            gr.Markdown("### Advanced Search")
-            
-            with gr.Row():
-                with gr.Column(scale=2):
-                    adv_search_term = gr.Textbox(
-                        label="Search Term", 
-                        placeholder="Enter item details..."
-                    )
-                    adv_tags = gr.Dropdown(
-                        label="Tags", 
-                        choices=TAGS, 
-                        multiselect=True
-                    )
-                    
-                with gr.Column(scale=1):
-                    adv_image = gr.Image(
-                        label="Upload Reference Image", 
-                        type="filepath"
-                    )
-            adv_search_btn = gr.Button("Search", variant="primary")
-            adv_results_display = gr.Markdown("--- \n*Results will appear here.*")
-
-        # ==========================================
-        # TAB 3: SUBMIT FOUND ITEM
-        # ==========================================
-        with gr.Tab("Submit a Found Item", id="found_tab"):
-            btn_home_from_found = gr.Button("← Back to Home", variant="secondary", size="sm")
-            gr.Markdown("### Submit a Lost Item")
-            
-            with gr.Row():
-                submit_title = gr.Textbox(label="Title", placeholder="e.g., Blue Hydro Flask")
-                submit_date = gr.Textbox(label="Date", placeholder="YYYY-MM-DD") 
+        # Row 1 of Items
+        with gr.Row():
+            with gr.Column():
+                gr.Markdown("#### Bag phannypack")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=Fanny+Pack", show_label=False, interactive=False)
+                gr.Markdown("Black crossbody bag. Found near SDFC entrance.")
+                btn_claim_1 = gr.Button("Claim Item", variant="primary")
                 
-            submit_description = gr.Textbox(label="Description", lines=3)
-            
-            with gr.Row():
-                submit_location = gr.Dropdown(
-                    choices=["Memorial Union", "Hayden Library", "SDFC", "Computing Commons"], 
-                    label="Location"
+            with gr.Column():
+                gr.Markdown("#### Card wallet")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=Wallet", show_label=False, interactive=False)
+                gr.Markdown("Black card holder 'Tommy Hilfiger' Lost 9/25 Found in pod 4 creativity commons")
+                btn_claim_2 = gr.Button("Claim Item", variant="primary")
+                
+            with gr.Column():
+                gr.Markdown("#### White beaded ring")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=Ring", show_label=False, interactive=False)
+                gr.Markdown("White beaded ring. Found on 2nd floor Noble Library.")
+                btn_claim_3 = gr.Button("Claim Item", variant="primary")
+                
+            with gr.Column():
+                gr.Markdown("#### Gold key")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=Gold+Key", show_label=False, interactive=False)
+                gr.Markdown("Single gold house key. Found outside Memorial Union.")
+                btn_claim_4 = gr.Button("Claim Item", variant="primary")
+
+        # Row 2 of Items
+        with gr.Row():
+            with gr.Column():
+                gr.Markdown("#### AirPod (right)")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=AirPod", show_label=False, interactive=False)
+                gr.Markdown("Single right Apple AirPod. Found in Tooker House lobby.")
+                btn_claim_5 = gr.Button("Claim Item", variant="primary")
+                
+            with gr.Column():
+                gr.Markdown("#### Black Lenovo charger")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=Charger", show_label=False, interactive=False)
+                gr.Markdown("Standard USB-C Lenovo laptop charger.")
+                btn_claim_6 = gr.Button("Claim Item", variant="primary")
+                
+            with gr.Column():
+                gr.Markdown("#### Blue HP Computer")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=Laptop", show_label=False, interactive=False)
+                gr.Markdown("Blue HP Computer with Corn, Spanish Forks Up, and USGS stickers.")
+                btn_claim_7 = gr.Button("Claim Item", variant="primary")
+                
+            with gr.Column():
+                gr.Markdown("#### Airpods")
+                gr.Image("https://placehold.co/400x300/8C1D40/FFFFFF/png?text=AirPods+Case", show_label=False, interactive=False)
+                gr.Markdown("White Apple AirPods case with both earbuds inside.")
+                btn_claim_8 = gr.Button("Claim Item", variant="primary")
+
+        # Status output for claim buttons
+        claim_status = gr.Markdown()
+
+        with gr.Column(visible=False) as results_box:
+            gr.Markdown("### Search Results")
+            results_display = gr.Markdown()
+
+    # ==========================================
+    # PAGE 2: ADVANCED SEARCH (Hidden by default)
+    # ==========================================
+    with gr.Column(visible=False) as adv_search_page:
+        btn_home_from_adv = gr.Button("← Back to Home", variant="secondary", size="sm")
+        gr.Markdown("### Advanced Search")
+        
+        with gr.Row():
+            with gr.Column(scale=2):
+                adv_search_term = gr.Textbox(
+                    label="Search Term", 
+                    placeholder="Enter item details..."
                 )
-                submit_tags = gr.Dropdown(
-                    choices=TAGS, 
+                adv_tags = gr.Dropdown(
                     label="Tags", 
+                    choices=TAGS, 
                     multiselect=True
                 )
                 
-            submit_images = gr.File(file_count="multiple", file_types=["image"], label="Images (Up to 4 files)")
-            
-            submit_item_btn = gr.Button("Submit Item", variant="primary")
-            status_output = gr.Textbox(label="Submission Status", interactive=False)
+            with gr.Column(scale=1):
+                adv_image = gr.Image(
+                    label="Upload Reference Image", 
+                    type="filepath"
+                )
+        adv_search_btn = gr.Button("Search", variant="primary")
+        adv_results_display = gr.Markdown("--- \n*Results will appear here.*")
 
     # ==========================================
-    # BUTTON LINKING & EVENT LOGIC
+    # PAGE 3: SUBMIT FOUND ITEM (Hidden by default)
     # ==========================================
-    btn_advanced_search.click(fn=lambda: gr.Tabs(selected="adv_search_tab"), outputs=main_tabs)
-    btn_submit_found.click(fn=lambda: gr.Tabs(selected="found_tab"), outputs=main_tabs)
+    with gr.Column(visible=False) as submit_page:
+        btn_home_from_found = gr.Button("← Back to Home", variant="secondary", size="sm")
+        gr.Markdown("### Submit a Lost Item")
+        
+        with gr.Row():
+            submit_title = gr.Textbox(label="Title", placeholder="e.g., Blue Hydro Flask")
+            submit_date = gr.Textbox(label="Date", placeholder="YYYY-MM-DD") 
+            
+        submit_description = gr.Textbox(label="Description", lines=3)
+        
+        with gr.Row():
+            submit_location = gr.Dropdown(
+                choices=["Memorial Union", "Hayden Library", "SDFC", "Computing Commons"], 
+                label="Location"
+            )
+            submit_tags = gr.Dropdown(
+                choices=TAGS, 
+                label="Tags", 
+                multiselect=True
+            )
+            
+        submit_images = gr.File(file_count="multiple", file_types=["image"], label="Images (Up to 4 files)")
+        
+        submit_item_btn = gr.Button("Submit Item", variant="primary")
+        status_output = gr.Textbox(label="Submission Status", interactive=False)
+
+    # ==========================================
+    # BUTTON ROUTING LOGIC
+    # ==========================================
+    def go_to_adv():
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+        
+    def go_to_submit():
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+        
+    def go_to_home():
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+
+    btn_advanced_search.click(fn=go_to_adv, inputs=None, outputs=[home_page, adv_search_page, submit_page])
+    btn_submit_found.click(fn=go_to_submit, inputs=None, outputs=[home_page, adv_search_page, submit_page])
     
-    # Return Home logic
-    btn_home_from_adv.click(fn=lambda: gr.Tabs(selected="home_tab"), outputs=main_tabs)
-    btn_home_from_found.click(fn=lambda: gr.Tabs(selected="home_tab"), outputs=main_tabs)
+    btn_home_from_adv.click(fn=go_to_home, inputs=None, outputs=[home_page, adv_search_page, submit_page])
+    btn_home_from_found.click(fn=go_to_home, inputs=None, outputs=[home_page, adv_search_page, submit_page])
+
+    # ==========================================
+    # EVENT LOGIC
+    # ==========================================
+    # Claim Button logic
+    btn_claim_1.click(fn=lambda: claim_item("Bag phannypack"), outputs=claim_status)
+    btn_claim_2.click(fn=lambda: claim_item("Card wallet"), outputs=claim_status)
+    btn_claim_3.click(fn=lambda: claim_item("White beaded ring"), outputs=claim_status)
+    btn_claim_4.click(fn=lambda: claim_item("Gold key"), outputs=claim_status)
+    btn_claim_5.click(fn=lambda: claim_item("AirPod (right)"), outputs=claim_status)
+    btn_claim_6.click(fn=lambda: claim_item("Black Lenovo charger"), outputs=claim_status)
+    btn_claim_7.click(fn=lambda: claim_item("Blue HP Computer"), outputs=claim_status)
+    btn_claim_8.click(fn=lambda: claim_item("Airpods"), outputs=claim_status)
 
     search_btn.click(fn=show_query, inputs=search_bar, outputs=[results_box, results_display])
     search_bar.submit(fn=show_query, inputs=search_bar, outputs=[results_box, results_display])
