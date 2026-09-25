@@ -1,11 +1,10 @@
 """Validate, store, replace, and delete reference/query images."""
 
-# TODO: validate_image(), store_image(), replace_image(), delete_image()
-
 from pathlib import Path
-from typing import Optional, Set
+from typing import List, Optional, Set
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
+import os
 
 # Resolve the root 'lostAI/images' directory relative to this file
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -26,36 +25,38 @@ def validate_image(file: Optional[FileStorage]) -> bool:
     return ext in ALLOWED_EXTENSIONS
 
 
-def store_image(file: FileStorage) -> dict:
-    """Validate and store an incoming uploaded image directly into the images/ folder.
-
-    Args:
-        file: The Werkzeug FileStorage object from request.files.
-        prefix: Prefix for the stored file ('ref', 'query', etc.).
-
-    Returns:
-        dict: Metadata with filename, absolute path, relative path, and extension.
-
-    Raises:
-        ValueError: If the file is missing or has an unsupported extension.
-    """
+def store_image(file: FileStorage, tags: Optional[List[str]] = None) -> dict:
     if not validate_image(file):
         raise ValueError(
             f"Invalid file or unsupported format. Allowed: {sorted(list(ALLOWED_EXTENSIONS))}"
         )
 
-    # Sanitize the uploaded name so it cannot escape the images directory.
     clean_name = secure_filename(file.filename or "")
     ext = clean_name.rsplit(".", 1)[-1].lower()
     filename = clean_name
     destination = IMAGES_DIR / filename
 
-    # Save to lostAI/images/
+    # Save image
     file.save(str(destination))
+
+    # Ensure tags is a non-empty list; fallback to default if empty
+    tags_list = [str(t).strip() for t in (tags or []) if str(t).strip()]
+    if not tags_list:
+        tags_list = ["default_item", "reference"]
+
+    # Write tags to file
+    tag_file_path = IMAGES_DIR / f"{Path(clean_name).stem}.txt"
+    with open(tag_file_path, "w", encoding="utf-8") as f:
+        # Join with newlines and add trailing newline
+        f.write("\n".join(tags_list) + "\n")
+        f.flush()
+        os.fsync(f.fileno())  # Force write to physical storage immediately
 
     return {
         "filename": filename,
         "filepath": str(destination),
-        "relative_path": f"images/{filename}",
-        "extension": ext
+        "relative_path": f"tags/{filename}",
+        "extension": ext,
+        "tags": tags_list,
+        "tag_file": str(tag_file_path)
     }
