@@ -1,6 +1,6 @@
 import gradio as gr
 
-# 1. Define the ASU colors
+# 1. Define the ASU colors as Gradio Color objects with light-to-dark shades
 asu_maroon = gr.themes.Color(
     name="maroon",
     c50="#f5e9ec", c100="#e6c8d1", c200="#d49fae", c300="#c07187", c400="#b14d68",
@@ -27,28 +27,28 @@ asu_theme = gr.themes.Default(
     slider_color="*secondary_500"
 )
 
-def process_submission(title, description, date, location, tags, top_img, bot_img, s1_img, s2_img):
+# Updated function to process the bounty
+def process_bounty(title, bounty_amount, location, tags, top_img, bot_img, s1_img, s2_img):
     if not title or not location:
         return "⚠️ Error: Title and Location are required fields."
     
     uploaded_images = [img for img in [top_img, bot_img, s1_img, s2_img] if img is not None]
     
-    return f"✅ Successfully submitted '{title}' with {len(uploaded_images)} image(s)!"
+    return f"🚨 BOUNTY ACTIVATED! '{title}' reported missing with a ${bounty_amount} reward and {len(uploaded_images)} reference image(s)."
 
 # 3. Apply the theme in Blocks
-with gr.Blocks() as lost_found_ui:
-    gr.Markdown("# 🔱 Submit a Lost Item")
+with gr.Blocks() as missing_bounty_ui:
+    gr.Markdown("# 🚨 Report a Missing Item (Bounty System)")
     
     with gr.Row():
-        title = gr.Textbox(label="Title", placeholder="e.g., Orange Hydro Flask")
-        date = gr.Textbox(label="Date", placeholder="YYYY-MM-DD") 
+        title = gr.Textbox(label="Title", placeholder="e.g., Missing AirPods Pro")
+        # Added a number field so users can actually set the bounty value
+        bounty_amount = gr.Number(label="Bounty Reward ($)", minimum=0, value=15) 
         
-    description = gr.Textbox(label="Description", lines=3)
-    
     with gr.Row():
         location = gr.Dropdown(
             choices=["Memorial Union", "Hayden Library", "SDFC", "Computing Commons"], 
-            label="Location"
+            label="Last Known Location"
         )
         tags = gr.Dropdown(
             choices=["Electronics", "Water Bottles", "Keys", "Clothing", "Wallet/ID"], 
@@ -56,24 +56,25 @@ with gr.Blocks() as lost_found_ui:
             multiselect=True
         )
         
-    gr.Markdown("### Image Uploads")
+    gr.Markdown("### Reference Images")
     
-    # 4 separate image boxes arranged in a 2x2 grid with hardcoded default values pointing to the images folder
+    # 4 separate image boxes arranged in a 2x2 grid
     with gr.Row():
-        top_image = gr.Image(value="images/test-image-4.jpeg", type="filepath", label="Top")
-        bottom_image = gr.Image(value="images/test-image-3.jpeg", type="filepath", label="Bottom")
+        top_image = gr.Image(type="filepath", label="Top")
+        bottom_image = gr.Image(type="filepath", label="Bottom")
     with gr.Row():
-        side1_image = gr.Image(value="images/test-image-1.jpeg", type="filepath", label="Side 1")
-        side2_image = gr.Image(value="images/test-image-2.jpeg", type="filepath", label="Side 2")
+        side1_image = gr.Image(type="filepath", label="Side 1")
+        side2_image = gr.Image(type="filepath", label="Side 2")
     
-    submit_btn = gr.Button("Submit Item", variant="primary")
-    status_output = gr.Textbox(label="Submission Status", interactive=False)
+    submit_btn = gr.Button("Post Bounty", variant="primary")
+    status_output = gr.Textbox(label="Bounty Status", interactive=False)
     
+    # Bind the button to the function
     submit_btn.click(
-        fn=process_submission,
-        inputs=[title, description, date, location, tags, top_image, bottom_image, side1_image, side2_image],
+        fn=process_bounty,
+        inputs=[title, bounty_amount, location, tags, top_image, bottom_image, side1_image, side2_image],
         outputs=[status_output]
     )
 
 if __name__ == "__main__":
-    lost_found_ui.launch(theme=asu_theme)
+    missing_bounty_ui.launch(theme=asu_theme)
